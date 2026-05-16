@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { OrderStatus } from "@/lib/generated/prisma/client"
 
-const VALID_STATUSES: OrderStatus[] = ["received", "cooking", "served", "canceled"]
+const VALID_STATUSES: OrderStatus[] = ["received", "preparing", "served", "canceled"]
 
 export async function PATCH(
   req: NextRequest,

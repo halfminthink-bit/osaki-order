@@ -10,14 +10,14 @@ type Props = {
 
 const STATUS_LABELS: Record<string, string> = {
   received: "受付済",
-  cooking: "調理中",
+  preparing: "調理中",
   served: "提供済",
   canceled: "取消済",
 }
 
 const STATUS_COLORS: Record<string, string> = {
   received: "bg-gray-100 text-gray-600",
-  cooking: "bg-amber-100 text-amber-800",
+  preparing: "bg-amber-100 text-amber-800",
   served: "bg-green-100 text-green-800",
   canceled: "bg-gray-100 text-gray-400",
 }

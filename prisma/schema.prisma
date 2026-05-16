@@ -9,7 +9,7 @@ datasource db {
 
 enum OrderStatus {
   received
-  cooking
+  preparing
   served
   canceled
 }

@@ -21,33 +21,31 @@ type Order = {
 
 const STATUS_LABELS: Record<string, string> = {
   received: "受付済",
-  cooking: "調理中",
+  preparing: "調理中",
   served: "提供済",
-  canceled: "キャンセル",
+  canceled: "取消済",
 }
 
 const STATUS_COLORS: Record<string, string> = {
   received: "bg-amber-100 text-amber-800",
-  cooking: "bg-blue-100 text-blue-800",
+  preparing: "bg-blue-100 text-blue-800",
   served: "bg-green-100 text-green-800",
   canceled: "bg-gray-100 text-gray-500",
 }
-
-const NEXT_STATUSES = ["received", "cooking", "served", "canceled"] as const
 
 export default function OrderCard({ order }: { order: Order }) {
   const [status, setStatus] = useState(order.status)
   const [loading, setLoading] = useState(false)
 
-  async function changeStatus(newStatus: string) {
+  async function cancelOrder() {
     setLoading(true)
     const res = await fetch(`/api/orders/${order.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
+      body: JSON.stringify({ status: "canceled" }),
     })
     if (res.ok) {
-      setStatus(newStatus)
+      setStatus("canceled")
     }
     setLoading(false)
   }
@@ -57,6 +55,8 @@ export default function OrderCard({ order }: { order: Order }) {
     hour: "2-digit",
     minute: "2-digit",
   })
+
+  const canCancel = status !== "served" && status !== "canceled"
 
   return (
     <div className="bg-white rounded-xl shadow border border-gray-100 overflow-hidden">
@@ -72,8 +72,8 @@ export default function OrderCard({ order }: { order: Order }) {
           <span className="text-sm text-gray-500">{order.partySize}名</span>
           <span className="text-sm text-gray-400">{timeStr}</span>
         </div>
-        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${STATUS_COLORS[status]}`}>
-          {STATUS_LABELS[status]}
+        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${STATUS_COLORS[status] ?? "bg-gray-100 text-gray-500"}`}>
+          {STATUS_LABELS[status] ?? status}
         </span>
       </div>
 
@@ -92,27 +92,20 @@ export default function OrderCard({ order }: { order: Order }) {
       </div>
 
       {/* Footer */}
-      <div className="px-4 py-3 border-t border-gray-100">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm text-gray-500">合計</span>
+      <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+        <div>
+          <span className="text-sm text-gray-500">合計 </span>
           <span className="font-bold text-gray-800">¥{order.totalPrice.toLocaleString()}</span>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          {NEXT_STATUSES.map((s) => (
-            <button
-              key={s}
-              disabled={status === s || loading}
-              onClick={() => changeStatus(s)}
-              className={`text-xs px-3 py-1.5 rounded-full border font-medium transition-colors
-                ${status === s
-                  ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50 active:bg-gray-100"
-                }`}
-            >
-              {STATUS_LABELS[s]}
-            </button>
-          ))}
-        </div>
+        {canCancel && (
+          <button
+            disabled={loading}
+            onClick={cancelOrder}
+            className="text-xs px-3 py-1.5 rounded-full border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 active:bg-red-200 font-medium transition-colors disabled:opacity-50"
+          >
+            {loading ? "処理中..." : "取消"}
+          </button>
+        )}
       </div>
     </div>
   )
