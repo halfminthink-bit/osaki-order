@@ -36,7 +36,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function OrderCard({ order }: { order: Order }) {
   const [status, setStatus] = useState(order.status)
-  const [isPaid, setIsPaid] = useState(order.isPaid)
+  const isPaid = order.isPaid
   const [loading, setLoading] = useState(false)
 
   async function cancelOrder() {
@@ -48,19 +48,6 @@ export default function OrderCard({ order }: { order: Order }) {
     })
     if (res.ok) {
       setStatus("canceled")
-    }
-    setLoading(false)
-  }
-
-  async function markPaid() {
-    setLoading(true)
-    const res = await fetch(`/api/orders/${order.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isPaid: true }),
-    })
-    if (res.ok) {
-      setIsPaid(true)
     }
     setLoading(false)
   }
@@ -127,22 +114,13 @@ export default function OrderCard({ order }: { order: Order }) {
           </span>
         </div>
         {showButtons && (
-          <div className="flex gap-2">
-            <button
-              disabled={loading}
-              onClick={markPaid}
-              className="text-xs px-3 py-1.5 rounded-full border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 active:bg-emerald-200 font-medium transition-colors disabled:opacity-50"
-            >
-              {loading ? "処理中..." : "会計済"}
-            </button>
-            <button
-              disabled={loading}
-              onClick={cancelOrder}
-              className="text-xs px-3 py-1.5 rounded-full border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 active:bg-red-200 font-medium transition-colors disabled:opacity-50"
-            >
-              {loading ? "処理中..." : "取消"}
-            </button>
-          </div>
+          <button
+            disabled={loading}
+            onClick={cancelOrder}
+            className="text-xs px-3 py-1.5 rounded-full border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 active:bg-red-200 font-medium transition-colors disabled:opacity-50"
+          >
+            {loading ? "処理中..." : "取消"}
+          </button>
         )}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
 import PrintButton from "./PrintButton"
+import CheckoutButton from "./CheckoutButton"
 
 export const dynamic = "force-dynamic"
 
@@ -92,7 +93,10 @@ export default async function TableBillingPage({
               </div>
             </div>
 
-            <PrintButton />
+            <div className="flex gap-3 print:hidden">
+              <PrintButton />
+              <CheckoutButton tableNumber={tableNum} grandTotal={grandTotal} />
+            </div>
           </>
         )}
       </main>

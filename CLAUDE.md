@@ -152,7 +152,7 @@ pnpm prisma generate  # クライアント生成
 4. 「注文確定」を押すと **DB に保存される**(Order + OrderItem)
 5. 店員側ページで注文一覧が見える、ステータス変更ができる
 6. 店員ページで「テーブル番号 → そのテーブルの注文と合計」が見える(会計用)
-7. 会計済管理(isPaid)による席回転対応: 「会計済」ボタンで isPaid: true に。以降 /staff/table と /order/status から除外され、同席番号の次客注文と混ざらない
+7. 会計済管理(isPaid)による席回転対応: **会計はテーブル単位の一括操作**。/staff/table/[n] の「会計する」ボタンで `POST /api/tables/[n]/checkout` を叩き、未払い全注文を一括 isPaid: true に。個別の isPaid 操作は禁止(誤操作防止)。会計後は /staff/table と /order/status から除外され、同席番号の次客注文と混ざらない
 
 ### Should(時間が許せば)
 - 経営ダッシュボード(`/dashboard`): 売れ筋ランキング、時間帯別、客単価
