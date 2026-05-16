@@ -37,11 +37,26 @@ export default async function CompletePage({ searchParams }: Props) {
           </p>
         )}
 
-        <Link href={backHref}>
-          <Button className="h-12 px-8 bg-amber-600 hover:bg-amber-700 text-white text-base font-semibold">
-            追加注文する
-          </Button>
-        </Link>
+        <div className="flex flex-col gap-3 w-full items-center">
+          {table && (
+            <Link
+              href={`/order/status?table=${table}${party ? `&party=${party}` : ""}`}
+              className="w-full max-w-xs"
+            >
+              <Button
+                variant="outline"
+                className="w-full h-12 border-amber-600 text-amber-600 hover:bg-amber-50 text-base font-semibold"
+              >
+                注文状況を見る
+              </Button>
+            </Link>
+          )}
+          <Link href={backHref} className="w-full max-w-xs">
+            <Button className="w-full h-12 bg-amber-600 hover:bg-amber-700 text-white text-base font-semibold">
+              追加注文する
+            </Button>
+          </Link>
+        </div>
       </main>
     </div>
   )

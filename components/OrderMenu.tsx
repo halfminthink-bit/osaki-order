@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { MENU_ITEMS, CATEGORY_LABELS, CATEGORIES } from "@/lib/menu"
@@ -158,7 +159,17 @@ export default function OrderMenu({
         })}
       </main>
 
-      <footer className="sticky bottom-0 z-10 bg-background border-t px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.08)]">
+      <footer className="sticky bottom-0 z-10 bg-background border-t px-4 py-3 shadow-[0_-2px_8px_rgba(0,0,0,0.08)] space-y-2">
+        {tableNum && (
+          <div className="text-center">
+            <Link
+              href={`/order/status?table=${tableNum}${partyNum ? `&party=${partyNum}` : ""}`}
+              className="text-xs text-amber-600 underline underline-offset-2"
+            >
+              注文状況を見る
+            </Link>
+          </div>
+        )}
         <Button
           className="w-full h-12 bg-amber-600 hover:bg-amber-700 text-white text-base font-semibold disabled:opacity-50"
           disabled={cartCount === 0}
