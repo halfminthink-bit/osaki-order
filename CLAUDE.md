@@ -101,12 +101,14 @@ type Order = {
   partySize: number         // 入店時に客が入力(1〜10人想定)
   items: OrderItem[]
   totalPrice: number        // items の合計を保存(後で集計しやすい)
-  status: OrderStatus       // "received" | "cooking" | "served" | "canceled"
+  status: OrderStatus       // "received" | "preparing" | "served" | "canceled"
+  isPaid: boolean           // 会計済フラグ。true になると /staff/table と /order/status から消える(席回転対応)
   createdAt: Date           // 時間帯分析に使う
   updatedAt: Date
 }
 
-type OrderStatus = "received" | "cooking" | "served" | "canceled"
+// preparing は DB enum に残すが、UI からは使わない(将来の復活余地)
+type OrderStatus = "received" | "preparing" | "served" | "canceled"
 ```
 
 ### OrderItem(注文の中の1品)
@@ -150,6 +152,7 @@ pnpm prisma generate  # クライアント生成
 4. 「注文確定」を押すと **DB に保存される**(Order + OrderItem)
 5. 店員側ページで注文一覧が見える、ステータス変更ができる
 6. 店員ページで「テーブル番号 → そのテーブルの注文と合計」が見える(会計用)
+7. 会計済管理(isPaid)による席回転対応: 「会計済」ボタンで isPaid: true に。以降 /staff/table と /order/status から除外され、同席番号の次客注文と混ざらない
 
 ### Should(時間が許せば)
 - 経営ダッシュボード(`/dashboard`): 売れ筋ランキング、時間帯別、客単価
