@@ -4,15 +4,16 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 type Props = {
-  searchParams: Promise<{ orderId?: string; table?: string; party?: string }>
+  searchParams: Promise<{ store?: string; orderId?: string; table?: string; party?: string }>
 }
 
 export default async function CompletePage({ searchParams }: Props) {
-  const { orderId, table, party } = await searchParams
+  const { store, orderId, table, party } = await searchParams
+  const storeParam = store ? `store=${store}&` : ""
   const statusHref = table
-    ? `/order/status?table=${table}${party ? `&party=${party}` : ""}`
+    ? `/order/status?${storeParam}table=${table}${party ? `&party=${party}` : ""}`
     : null
-  const menuHref = table && party ? `/order?table=${table}&party=${party}` : "/"
+  const menuHref = table && party ? `/order?${storeParam}table=${table}&party=${party}` : "/"
 
   return (
     <div className="flex flex-col min-h-screen bg-stone-50 max-w-md mx-auto">

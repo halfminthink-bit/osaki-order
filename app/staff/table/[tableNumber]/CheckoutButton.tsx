@@ -6,9 +6,11 @@ import { useState } from "react"
 export default function CheckoutButton({
   tableNumber,
   grandTotal,
+  storeId,
 }: {
   tableNumber: number
   grandTotal: number
+  storeId?: string
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -23,6 +25,8 @@ export default function CheckoutButton({
     try {
       const res = await fetch(`/api/tables/${tableNumber}/checkout`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId }),
       })
       if (!res.ok) {
         throw new Error("会計処理に失敗しました")

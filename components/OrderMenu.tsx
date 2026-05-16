@@ -21,9 +21,11 @@ const NAV_LABELS: Record<string, string> = {
 }
 
 export default function OrderMenu({
+  storeId,
   tableNum,
   partyNum,
 }: {
+  storeId: string
   tableNum: number | null
   partyNum: number | null
 }) {
@@ -81,6 +83,7 @@ export default function OrderMenu({
       .map((c) => `${c.menuItemId}:${c.quantity}`)
       .join(",")
     const params = new URLSearchParams()
+    params.set("store", storeId)
     if (tableNum) params.set("table", String(tableNum))
     if (partyNum) params.set("party", String(partyNum))
     params.set("items", itemsParam)
@@ -216,7 +219,7 @@ export default function OrderMenu({
         {tableNum && (
           <div className="text-center">
             <Link
-              href={`/order/status?table=${tableNum}${partyNum ? `&party=${partyNum}` : ""}`}
+              href={`/order/status?store=${storeId}&table=${tableNum}${partyNum ? `&party=${partyNum}` : ""}`}
               className="text-xs text-stone-600 underline underline-offset-2"
             >
               注文状況を見る

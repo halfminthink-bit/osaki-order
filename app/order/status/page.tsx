@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { Button } from "@/components/ui/button"
 
 type Props = {
-  searchParams: Promise<{ table?: string; party?: string }>
+  searchParams: Promise<{ store?: string; table?: string; party?: string }>
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -23,8 +23,25 @@ const STATUS_COLORS: Record<string, string> = {
 }
 
 export default async function StatusPage({ searchParams }: Props) {
-  const { table, party } = await searchParams
+  const { store, table, party } = await searchParams
   const tableNumber = Number(table)
+
+  if (!store) {
+    return (
+      <div className="flex flex-col min-h-screen bg-stone-50 max-w-md mx-auto">
+        <header className="sticky top-0 z-10 bg-stone-900 text-white px-4 py-3">
+          <h1 className="text-lg font-bold tracking-wide">OSAKI 亭</h1>
+        </header>
+        <main className="flex-1 px-4 py-10 flex flex-col justify-center gap-4 text-center">
+          <p className="text-4xl">⚠️</p>
+          <p className="text-base font-semibold text-stone-800">店舗が指定されていません</p>
+          <p className="text-sm text-stone-500 leading-relaxed">
+            店舗のQRコードから再度アクセスしてください。
+          </p>
+        </main>
+      </div>
+    )
+  }
 
   if (!table || isNaN(tableNumber)) {
     return (
@@ -43,7 +60,7 @@ export default async function StatusPage({ searchParams }: Props) {
   }
 
   const orders = await prisma.order.findMany({
-    where: { tableNumber, isPaid: false },
+    where: { storeId: store, tableNumber, isPaid: false },
     include: { items: true },
     orderBy: { createdAt: "asc" },
   })
@@ -52,8 +69,8 @@ export default async function StatusPage({ searchParams }: Props) {
   const grandTotal = activeOrders.reduce((sum, o) => sum + o.totalPrice, 0)
   const partySize = party ? Number(party) : null
   const menuHref = party
-    ? `/order?table=${table}&party=${party}`
-    : `/order?table=${table}`
+    ? `/order?store=${store}&table=${table}&party=${party}`
+    : `/order?store=${store}&table=${table}`
 
   return (
     <div className="flex flex-col min-h-screen bg-stone-50 max-w-md mx-auto">
@@ -153,7 +170,7 @@ export default async function StatusPage({ searchParams }: Props) {
         <footer className="sticky bottom-0 z-10 bg-white border-t border-stone-200 px-4 py-3">
           <Link href={menuHref}>
             <Button className="w-full h-12 bg-amber-700 hover:bg-amber-800 text-white text-base font-semibold">
-              メニューに戻る / 追加注文する
+              メニューに戻る・追加注文する
             </Button>
           </Link>
         </footer>

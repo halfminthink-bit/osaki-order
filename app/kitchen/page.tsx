@@ -4,14 +4,22 @@ import KitchenCard from "./KitchenCard"
 
 export const dynamic = "force-dynamic"
 
-export default async function KitchenPage() {
+export default async function KitchenPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ store?: string }>
+}) {
+  const { store } = await searchParams
   const orders = await prisma.order.findMany({
     where: {
+      ...(store ? { storeId: store } : {}),
       status: "received",
     },
     orderBy: { createdAt: "asc" },
     include: { items: true },
   })
+
+  const storeLabel = store ? `(store: ${store})` : "全店舗"
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -20,7 +28,7 @@ export default async function KitchenPage() {
           <div>
             <h1 className="text-xl font-bold text-stone-900">キッチン端末 — OSAKI 亭</h1>
             <p className="text-xs text-stone-500 mt-0.5">
-              未完了 {orders.length} 件 / 受付順
+              {storeLabel} / 未完了 {orders.length} 件 / 受付順
             </p>
           </div>
           <Link

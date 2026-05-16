@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ tableNumber: string }> }
 ) {
   const { tableNumber } = await params
@@ -12,8 +12,12 @@ export async function POST(
     return NextResponse.json({ error: "invalid tableNumber" }, { status: 400 })
   }
 
+  const body = await req.json().catch(() => ({}))
+  const storeId: string | undefined = body?.storeId
+
   const unpaidOrders = await prisma.order.findMany({
     where: {
+      ...(storeId ? { storeId } : {}),
       tableNumber: tableNum,
       isPaid: false,
       status: { not: "canceled" },

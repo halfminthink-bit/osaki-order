@@ -5,9 +5,26 @@ import { Input } from "@/components/ui/input"
 export default async function LandingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ table?: string }>
+  searchParams: Promise<{ store?: string; table?: string }>
 }) {
-  const { table } = await searchParams
+  const { store, table } = await searchParams
+
+  if (!store) {
+    return (
+      <div className="flex flex-col min-h-screen bg-stone-50 max-w-md mx-auto">
+        <header className="bg-stone-900 text-white px-4 py-4">
+          <h1 className="text-2xl font-bold tracking-wide">OSAKI 亭</h1>
+        </header>
+        <main className="flex-1 px-4 py-10 flex flex-col justify-center gap-4 text-center">
+          <p className="text-4xl">⚠️</p>
+          <p className="text-base font-semibold text-stone-800">店舗が指定されていません</p>
+          <p className="text-sm text-stone-500 leading-relaxed">
+            店舗のQRコードから再度アクセスしてください。
+          </p>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-stone-50 max-w-md mx-auto">
@@ -24,6 +41,7 @@ export default async function LandingPage({
         <Card className="border-stone-200">
           <CardContent className="py-6 space-y-5">
             <form action="/order" method="GET" className="space-y-5">
+              <input type="hidden" name="store" value={store} />
               <div className="space-y-1.5">
                 <label htmlFor="table" className="text-sm font-medium text-stone-900">
                   テーブル番号

@@ -14,8 +14,19 @@ enum OrderStatus {
   canceled
 }
 
+model Store {
+  id        String   @id
+  name      String
+  isDirect  Boolean
+  location  String?
+  orders    Order[]
+  createdAt DateTime @default(now())
+}
+
 model Order {
   id          String      @id @default(cuid())
+  storeId     String
+  store       Store       @relation(fields: [storeId], references: [id])
   tableNumber Int
   partySize   Int
   totalPrice  Int

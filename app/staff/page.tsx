@@ -4,11 +4,19 @@ import OrderCard from "./OrderCard"
 
 export const dynamic = "force-dynamic"
 
-export default async function StaffPage() {
+export default async function StaffPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ store?: string }>
+}) {
+  const { store } = await searchParams
   const orders = await prisma.order.findMany({
+    where: store ? { storeId: store } : undefined,
     orderBy: { createdAt: "desc" },
     include: { items: true },
   })
+
+  const storeLabel = store ? `(store: ${store})` : "全店舗"
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -16,7 +24,7 @@ export default async function StaffPage() {
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold text-stone-900">会計端末 — OSAKI 亭</h1>
-            <p className="text-xs text-stone-500 mt-0.5">全 {orders.length} 件</p>
+            <p className="text-xs text-stone-500 mt-0.5">{storeLabel} / 全 {orders.length} 件</p>
           </div>
           <Link
             href="/kitchen"
@@ -27,6 +35,7 @@ export default async function StaffPage() {
         </div>
         <div className="max-w-2xl mx-auto px-4 pb-4">
           <form action="/staff/table" className="flex gap-2">
+            {store && <input type="hidden" name="store" value={store} />}
             <input
               name="table"
               type="number"

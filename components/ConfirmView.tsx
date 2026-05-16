@@ -8,12 +8,13 @@ import { Card, CardContent } from "@/components/ui/card"
 import { MENU_ITEMS } from "@/lib/menu"
 
 type Props = {
+  store?: string
   table?: string
   party?: string
   items?: string
 }
 
-export default function ConfirmView({ table, party, items }: Props) {
+export default function ConfirmView({ store, table, party, items }: Props) {
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -49,6 +50,7 @@ export default function ConfirmView({ table, party, items }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          storeId: store,
           tableNumber: tableNum,
           partySize: partyNum,
           items: cartItems.map((c) => ({
@@ -63,7 +65,7 @@ export default function ConfirmView({ table, party, items }: Props) {
         return
       }
       const { orderId } = await res.json()
-      router.push(`/order/complete?orderId=${orderId}&table=${table}&party=${party}`)
+      router.push(`/order/complete?store=${store}&orderId=${orderId}&table=${table}&party=${party}`)
     } catch {
       setErrorMsg("通信エラーが発生しました。もう一度お試しください。")
     } finally {
@@ -71,7 +73,7 @@ export default function ConfirmView({ table, party, items }: Props) {
     }
   }
 
-  const backHref = `/order?table=${table ?? ""}&party=${party ?? ""}`
+  const backHref = `/order?store=${store ?? ""}&table=${table ?? ""}&party=${party ?? ""}`
 
   return (
     <div className="flex flex-col min-h-screen bg-stone-50 max-w-md mx-auto">

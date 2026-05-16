@@ -3,11 +3,28 @@ import OrderMenu from "@/components/OrderMenu"
 export default async function OrderPage({
   searchParams,
 }: {
-  searchParams: Promise<{ table?: string; party?: string }>
+  searchParams: Promise<{ store?: string; table?: string; party?: string }>
 }) {
-  const { table, party } = await searchParams
+  const { store, table, party } = await searchParams
   const tableNum = table ? parseInt(table, 10) : null
   const partyNum = party ? parseInt(party, 10) : null
 
-  return <OrderMenu tableNum={tableNum} partyNum={partyNum} />
+  if (!store) {
+    return (
+      <div className="flex flex-col min-h-screen bg-stone-50 max-w-md mx-auto">
+        <header className="sticky top-0 z-10 bg-stone-900 text-white px-4 py-3">
+          <h1 className="text-lg font-bold tracking-wide">OSAKI 亭</h1>
+        </header>
+        <main className="flex-1 px-4 py-10 flex flex-col justify-center gap-4 text-center">
+          <p className="text-4xl">⚠️</p>
+          <p className="text-base font-semibold text-stone-800">店舗が指定されていません</p>
+          <p className="text-sm text-stone-500 leading-relaxed">
+            店舗のQRコードから再度アクセスしてください。
+          </p>
+        </main>
+      </div>
+    )
+  }
+
+  return <OrderMenu storeId={store} tableNum={tableNum} partyNum={partyNum} />
 }

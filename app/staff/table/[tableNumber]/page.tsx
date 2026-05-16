@@ -7,14 +7,18 @@ export const dynamic = "force-dynamic"
 
 export default async function TableBillingPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ tableNumber: string }>
+  searchParams: Promise<{ store?: string }>
 }) {
   const { tableNumber } = await params
+  const { store } = await searchParams
   const tableNum = Number(tableNumber)
 
   const orders = await prisma.order.findMany({
     where: {
+      ...(store ? { storeId: store } : {}),
       tableNumber: tableNum,
       isPaid: false,
       status: { not: "canceled" },
@@ -101,7 +105,7 @@ export default async function TableBillingPage({
 
             <div className="flex gap-3 print:hidden">
               <PrintButton />
-              <CheckoutButton tableNumber={tableNum} grandTotal={grandTotal} />
+              <CheckoutButton tableNumber={tableNum} grandTotal={grandTotal} storeId={store} />
             </div>
           </>
         )}
