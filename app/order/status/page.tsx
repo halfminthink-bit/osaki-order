@@ -59,11 +59,15 @@ export default async function StatusPage({ searchParams }: Props) {
     )
   }
 
-  const orders = await prisma.order.findMany({
-    where: { storeId: store, tableNumber, isPaid: false },
-    include: { items: true },
-    orderBy: { createdAt: "asc" },
-  })
+  const [orders, storeRecord] = await Promise.all([
+    prisma.order.findMany({
+      where: { storeId: store, tableNumber, isPaid: false },
+      include: { items: true },
+      orderBy: { createdAt: "asc" },
+    }),
+    prisma.store.findUnique({ where: { id: store }, select: { name: true } }),
+  ])
+  const storeName = storeRecord?.name ?? "OSAKI 亭"
 
   const activeOrders = orders.filter((o) => o.status !== "canceled")
   const grandTotal = activeOrders.reduce((sum, o) => sum + o.totalPrice, 0)
@@ -76,7 +80,7 @@ export default async function StatusPage({ searchParams }: Props) {
     <div className="flex flex-col min-h-screen bg-stone-50 max-w-md mx-auto">
       <header className="sticky top-0 z-10 bg-stone-900 text-white px-4 py-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold tracking-wide">OSAKI 亭</h1>
+          <h1 className="text-lg font-bold tracking-wide">{storeName}</h1>
           <p className="text-xs text-stone-300">
             {tableNumber} 番{partySize ? ` / ${partySize} 名様` : ""}
           </p>

@@ -9,12 +9,13 @@ import { MENU_ITEMS } from "@/lib/menu"
 
 type Props = {
   store?: string
+  storeName?: string
   table?: string
   party?: string
   items?: string
 }
 
-export default function ConfirmView({ store, table, party, items }: Props) {
+export default function ConfirmView({ store, storeName, table, party, items }: Props) {
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -79,7 +80,7 @@ export default function ConfirmView({ store, table, party, items }: Props) {
     <div className="flex flex-col min-h-screen bg-stone-50 max-w-md mx-auto">
       <header className="sticky top-0 z-10 bg-stone-900 text-white px-4 py-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold tracking-wide">OSAKI 亭</h1>
+          <h1 className="text-lg font-bold tracking-wide">{storeName ?? "OSAKI 亭"}</h1>
           {tableNum && (
             <p className="text-xs text-stone-300">
               {tableNum} 番{partyNum ? ` / ${partyNum} 名様` : ""}

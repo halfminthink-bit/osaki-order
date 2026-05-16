@@ -19,16 +19,19 @@ export default async function KitchenPage({
     include: { items: true },
   })
 
-  const storeLabel = store ? `(store: ${store})` : "全店舗"
+  const storeRecord = store
+    ? await prisma.store.findUnique({ where: { id: store }, select: { name: true } })
+    : null
+  const storeLabel = storeRecord ? storeRecord.name : "全店舗"
 
   return (
     <div className="min-h-screen bg-gray-900">
       <header className="bg-stone-100 border-b border-stone-200 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-stone-900">キッチン端末 — OSAKI 亭</h1>
+            <h1 className="text-xl font-bold text-stone-900">キッチン端末 — {storeLabel}</h1>
             <p className="text-xs text-stone-500 mt-0.5">
-              {storeLabel} / 未完了 {orders.length} 件 / 受付順
+              未完了 {orders.length} 件 / 受付順
             </p>
           </div>
           <Link

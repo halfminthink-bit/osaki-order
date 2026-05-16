@@ -72,7 +72,7 @@ export default async function StaffPage({
       <header className="bg-stone-100 border-b border-stone-200 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-stone-900">会計端末 — OSAKI 亭</h1>
+            <h1 className="text-xl font-bold text-stone-900">会計端末 — {storeLabel}</h1>
             <p className="text-xs text-stone-500 mt-0.5">
               {storeLabel} / 対応中 {groups.length} テーブル
             </p>

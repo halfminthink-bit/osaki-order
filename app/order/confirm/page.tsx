@@ -1,4 +1,7 @@
 import ConfirmView from "@/components/ConfirmView"
+import { prisma } from "@/lib/prisma"
+
+export const dynamic = "force-dynamic"
 
 export default async function ConfirmPage({
   searchParams,
@@ -24,5 +27,8 @@ export default async function ConfirmPage({
     )
   }
 
-  return <ConfirmView store={store} table={table} party={party} items={items} />
+  const storeRecord = await prisma.store.findUnique({ where: { id: store }, select: { name: true } })
+  const storeName = storeRecord?.name ?? store
+
+  return <ConfirmView store={store} storeName={storeName} table={table} party={party} items={items} />
 }

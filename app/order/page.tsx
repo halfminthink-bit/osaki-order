@@ -1,4 +1,7 @@
 import OrderMenu from "@/components/OrderMenu"
+import { prisma } from "@/lib/prisma"
+
+export const dynamic = "force-dynamic"
 
 export default async function OrderPage({
   searchParams,
@@ -26,5 +29,8 @@ export default async function OrderPage({
     )
   }
 
-  return <OrderMenu storeId={store} tableNum={tableNum} partyNum={partyNum} />
+  const storeRecord = await prisma.store.findUnique({ where: { id: store }, select: { name: true } })
+  const storeName = storeRecord?.name ?? store
+
+  return <OrderMenu storeId={store} storeName={storeName} tableNum={tableNum} partyNum={partyNum} />
 }

@@ -16,6 +16,10 @@ export default async function TableBillingPage({
   const { store } = await searchParams
   const tableNum = Number(tableNumber)
 
+  const storeRecord = store
+    ? await prisma.store.findUnique({ where: { id: store }, select: { name: true } })
+    : null
+
   const orders = await prisma.order.findMany({
     where: {
       ...(store ? { storeId: store } : {}),
@@ -43,7 +47,7 @@ export default async function TableBillingPage({
           </Link>
           <span className="text-stone-300">|</span>
           <h1 className="text-xl font-bold text-stone-900">
-            テーブル {tableNum} — 会計
+            {storeRecord ? `${storeRecord.name} — ` : ""}テーブル {tableNum}
           </h1>
         </div>
       </header>

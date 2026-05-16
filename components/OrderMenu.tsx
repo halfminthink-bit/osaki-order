@@ -22,10 +22,12 @@ const NAV_LABELS: Record<string, string> = {
 
 export default function OrderMenu({
   storeId,
+  storeName,
   tableNum,
   partyNum,
 }: {
   storeId: string
+  storeName: string
   tableNum: number | null
   partyNum: number | null
 }) {
@@ -95,7 +97,7 @@ export default function OrderMenu({
       <div className="sticky top-0 z-10">
         <header className="bg-stone-900 text-white px-4 py-3">
           <div className="flex items-center justify-between">
-            <h1 className="text-lg font-bold tracking-wide">OSAKI 亭</h1>
+            <h1 className="text-lg font-bold tracking-wide">{storeName}</h1>
             {tableNum && (
               <p className="text-xs text-stone-300">
                 {tableNum} 番{partyNum ? ` / ${partyNum} 名様` : ""}

@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { prisma } from "@/lib/prisma"
 
 type Props = {
   searchParams: Promise<{ store?: string; orderId?: string; table?: string; party?: string }>
@@ -10,6 +11,11 @@ type Props = {
 export default async function CompletePage({ searchParams }: Props) {
   const { store, orderId, table, party } = await searchParams
   const storeParam = store ? `store=${store}&` : ""
+
+  const storeRecord = store
+    ? await prisma.store.findUnique({ where: { id: store }, select: { name: true } })
+    : null
+  const storeName = storeRecord?.name ?? "OSAKI 亭"
   const statusHref = table
     ? `/order/status?${storeParam}table=${table}${party ? `&party=${party}` : ""}`
     : null
@@ -19,7 +25,7 @@ export default async function CompletePage({ searchParams }: Props) {
     <div className="flex flex-col min-h-screen bg-stone-50 max-w-md mx-auto">
       <header className="sticky top-0 z-10 bg-stone-900 text-white px-4 py-3">
         <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold tracking-wide">OSAKI 亭</h1>
+          <h1 className="text-lg font-bold tracking-wide">{storeName}</h1>
           {table && (
             <p className="text-xs text-stone-300">
               {table} 番{party ? ` / ${party} 名様` : ""}

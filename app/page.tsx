@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { prisma } from "@/lib/prisma"
+
+export const dynamic = "force-dynamic"
 
 export default async function LandingPage({
   searchParams,
@@ -26,10 +29,13 @@ export default async function LandingPage({
     )
   }
 
+  const storeRecord = await prisma.store.findUnique({ where: { id: store }, select: { name: true } })
+  const storeName = storeRecord?.name ?? store
+
   return (
     <div className="flex flex-col min-h-screen bg-stone-50 max-w-md mx-auto">
       <header className="bg-stone-900 text-white px-4 py-4">
-        <h1 className="text-2xl font-bold tracking-wide">OSAKI 亭</h1>
+        <h1 className="text-2xl font-bold tracking-wide">{storeName}</h1>
       </header>
 
       <main className="flex-1 px-4 py-10 flex flex-col justify-center gap-6">

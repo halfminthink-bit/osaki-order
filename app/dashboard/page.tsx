@@ -105,7 +105,7 @@ export default async function DashboardPage() {
       <header className="bg-stone-900 text-white sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-bold">経営ダッシュボード — OSAKI 亭</h1>
+            <h1 className="text-lg font-bold">経営ダッシュボード — 全店舗</h1>
             <p className="text-xs text-stone-400 mt-0.5">キャンセルを除く全注文の集計</p>
           </div>
           <nav className="flex gap-3">
