@@ -15,6 +15,7 @@ export default async function TableBillingPage({
   const orders = await prisma.order.findMany({
     where: {
       tableNumber: tableNum,
+      isPaid: false,
       status: { not: "canceled" },
     },
     orderBy: { createdAt: "asc" },

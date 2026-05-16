@@ -43,7 +43,7 @@ export default async function StatusPage({ searchParams }: Props) {
   }
 
   const orders = await prisma.order.findMany({
-    where: { tableNumber },
+    where: { tableNumber, isPaid: false },
     include: { items: true },
     orderBy: { createdAt: "asc" },
   })

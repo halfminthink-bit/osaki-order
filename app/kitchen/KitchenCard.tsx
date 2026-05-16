@@ -44,12 +44,12 @@ export default function KitchenCard({ order }: { order: KitchenOrder }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
-  const updateStatus = useCallback(async (newStatus: string) => {
+  const markServed = useCallback(async () => {
     setLoading(true)
     const res = await fetch(`/api/orders/${order.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
+      body: JSON.stringify({ status: "served" }),
     })
     if (res.ok) {
       router.refresh()
@@ -57,26 +57,17 @@ export default function KitchenCard({ order }: { order: KitchenOrder }) {
     setLoading(false)
   }, [order.id, router])
 
-  const isReceived = order.status === "received"
-  const isPreparing = order.status === "preparing"
-
   return (
-    <div className={`bg-white rounded-xl shadow border-2 overflow-hidden ${
-      isPreparing ? "border-blue-300" : "border-amber-300"
-    }`}>
+    <div className="bg-white rounded-xl shadow border-2 border-amber-300 overflow-hidden">
       {/* Header */}
-      <div className={`px-4 py-3 flex items-center justify-between ${
-        isPreparing ? "bg-blue-50" : "bg-amber-50"
-      }`}>
+      <div className="px-4 py-3 flex items-center justify-between bg-amber-50">
         <div className="flex items-center gap-3">
           <span className="text-2xl font-bold text-gray-800">
             T{order.tableNumber}
           </span>
           <span className="text-sm text-gray-500">{order.partySize}名</span>
-          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-            isPreparing ? "bg-blue-100 text-blue-800" : "bg-amber-100 text-amber-800"
-          }`}>
-            {isPreparing ? "調理中" : "受付済"}
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+            受付済
           </span>
         </div>
         <div className="flex items-center gap-2 text-sm text-gray-400">
@@ -100,24 +91,13 @@ export default function KitchenCard({ order }: { order: KitchenOrder }) {
 
       {/* Action */}
       <div className="px-4 py-3 border-t border-gray-100">
-        {isReceived && (
-          <button
-            disabled={loading}
-            onClick={() => updateStatus("preparing")}
-            className="w-full py-3 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold text-base rounded-lg disabled:opacity-50 transition-colors"
-          >
-            {loading ? "更新中..." : "調理開始"}
-          </button>
-        )}
-        {isPreparing && (
-          <button
-            disabled={loading}
-            onClick={() => updateStatus("served")}
-            className="w-full py-3 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold text-base rounded-lg disabled:opacity-50 transition-colors"
-          >
-            {loading ? "更新中..." : "調理完了"}
-          </button>
-        )}
+        <button
+          disabled={loading}
+          onClick={markServed}
+          className="w-full py-3 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold text-base rounded-lg disabled:opacity-50 transition-colors"
+        >
+          {loading ? "更新中..." : "調理完了"}
+        </button>
       </div>
     </div>
   )

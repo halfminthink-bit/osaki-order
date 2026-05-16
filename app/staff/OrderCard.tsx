@@ -15,6 +15,7 @@ type Order = {
   partySize: number
   totalPrice: number
   status: string
+  isPaid: boolean
   createdAt: Date
   items: OrderItem[]
 }
@@ -28,13 +29,14 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_COLORS: Record<string, string> = {
   received: "bg-amber-100 text-amber-800",
-  preparing: "bg-blue-100 text-blue-800",
+  preparing: "bg-amber-100 text-amber-800",
   served: "bg-green-100 text-green-800",
   canceled: "bg-gray-100 text-gray-500",
 }
 
 export default function OrderCard({ order }: { order: Order }) {
   const [status, setStatus] = useState(order.status)
+  const [isPaid, setIsPaid] = useState(order.isPaid)
   const [loading, setLoading] = useState(false)
 
   async function cancelOrder() {
@@ -50,16 +52,32 @@ export default function OrderCard({ order }: { order: Order }) {
     setLoading(false)
   }
 
+  async function markPaid() {
+    setLoading(true)
+    const res = await fetch(`/api/orders/${order.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isPaid: true }),
+    })
+    if (res.ok) {
+      setIsPaid(true)
+    }
+    setLoading(false)
+  }
+
   const createdAt = new Date(order.createdAt)
   const timeStr = createdAt.toLocaleTimeString("ja-JP", {
     hour: "2-digit",
     minute: "2-digit",
   })
 
-  const canCancel = status !== "served" && status !== "canceled"
+  const isCanceled = status === "canceled"
+  const showButtons = !isPaid && !isCanceled
 
   return (
-    <div className="bg-white rounded-xl shadow border border-gray-100 overflow-hidden">
+    <div className={`bg-white rounded-xl shadow border overflow-hidden transition-opacity ${
+      isPaid || isCanceled ? "opacity-60" : ""
+    } ${isCanceled ? "border-gray-200" : "border-gray-100"}`}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100">
         <div className="flex items-center gap-3">
@@ -72,16 +90,25 @@ export default function OrderCard({ order }: { order: Order }) {
           <span className="text-sm text-gray-500">{order.partySize}名</span>
           <span className="text-sm text-gray-400">{timeStr}</span>
         </div>
-        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${STATUS_COLORS[status] ?? "bg-gray-100 text-gray-500"}`}>
-          {STATUS_LABELS[status] ?? status}
-        </span>
+        <div className="flex items-center gap-2">
+          {isPaid && (
+            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">
+              会計済
+            </span>
+          )}
+          {!isPaid && (
+            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${STATUS_COLORS[status] ?? "bg-gray-100 text-gray-500"}`}>
+              {STATUS_LABELS[status] ?? status}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Items */}
       <div className="px-4 py-3 space-y-1">
         {order.items.map((item) => (
           <div key={item.id} className="flex justify-between text-sm">
-            <span className="text-gray-700">
+            <span className={isCanceled ? "text-gray-400 line-through" : "text-gray-700"}>
               {item.menuItemName} × {item.quantity}
             </span>
             <span className="text-gray-500">
@@ -95,16 +122,27 @@ export default function OrderCard({ order }: { order: Order }) {
       <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
         <div>
           <span className="text-sm text-gray-500">合計 </span>
-          <span className="font-bold text-gray-800">¥{order.totalPrice.toLocaleString()}</span>
+          <span className={`font-bold ${isCanceled ? "text-gray-400 line-through" : "text-gray-800"}`}>
+            ¥{order.totalPrice.toLocaleString()}
+          </span>
         </div>
-        {canCancel && (
-          <button
-            disabled={loading}
-            onClick={cancelOrder}
-            className="text-xs px-3 py-1.5 rounded-full border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 active:bg-red-200 font-medium transition-colors disabled:opacity-50"
-          >
-            {loading ? "処理中..." : "取消"}
-          </button>
+        {showButtons && (
+          <div className="flex gap-2">
+            <button
+              disabled={loading}
+              onClick={markPaid}
+              className="text-xs px-3 py-1.5 rounded-full border border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 active:bg-emerald-200 font-medium transition-colors disabled:opacity-50"
+            >
+              {loading ? "処理中..." : "会計済"}
+            </button>
+            <button
+              disabled={loading}
+              onClick={cancelOrder}
+              className="text-xs px-3 py-1.5 rounded-full border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 active:bg-red-200 font-medium transition-colors disabled:opacity-50"
+            >
+              {loading ? "処理中..." : "取消"}
+            </button>
+          </div>
         )}
       </div>
     </div>

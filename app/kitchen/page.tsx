@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic"
 export default async function KitchenPage() {
   const orders = await prisma.order.findMany({
     where: {
-      status: { in: ["received", "preparing"] },
+      status: "received",
     },
     orderBy: { createdAt: "asc" },
     include: { items: true },

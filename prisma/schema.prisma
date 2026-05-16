@@ -20,6 +20,7 @@ model Order {
   partySize   Int
   totalPrice  Int
   status      OrderStatus @default(received)
+  isPaid      Boolean     @default(false)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   items       OrderItem[]
