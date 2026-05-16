@@ -21,6 +21,8 @@ type StoreRow = {
   totalGuests: bigint
 }
 
+const PAID_WHERE = Prisma.sql`o."isPaid" = true AND o.status != 'canceled'::"OrderStatus"`
+
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   received: { label: "受付済", color: "bg-blue-100 text-blue-700" },
   preparing: { label: "調理中", color: "bg-amber-100 text-amber-700" },
@@ -29,9 +31,9 @@ const STATUS_LABEL: Record<string, { label: string; color: string }> = {
 }
 
 export default async function DashboardPage() {
-  // ── 集計クエリ ───────────────────────────────────────────
+  // ── 集計クエリ（会計済のみ）───────────────────────────────
   const summary = await prisma.order.aggregate({
-    where: { status: { not: "canceled" } },
+    where: { isPaid: true, status: { not: "canceled" } },
     _sum: { totalPrice: true, partySize: true },
     _count: true,
   })
@@ -41,7 +43,7 @@ export default async function DashboardPage() {
   const totalGuests = summary._sum.partySize ?? 0
   const perGuestAvg = totalGuests > 0 ? Math.round(totalRevenue / totalGuests) : 0
 
-  // ── 売れ筋 TOP10 (raw SQL) ───────────────────────────────
+  // ── 売れ筋 TOP10（会計済のみ）───────────────────────────
   const ranking = await prisma.$queryRaw<RankingRow[]>(Prisma.sql`
     SELECT
       oi."menuItemId",
@@ -50,31 +52,35 @@ export default async function DashboardPage() {
       SUM(oi.price * oi.quantity)::bigint AS "totalRevenue"
     FROM "OrderItem" oi
     JOIN "Order" o ON oi."orderId" = o.id
-    WHERE o.status != 'canceled'::"OrderStatus"
+    WHERE ${PAID_WHERE}
     GROUP BY oi."menuItemId", oi."menuItemName"
     ORDER BY "totalRevenue" DESC
     LIMIT 10
   `)
 
-  // ── 時間帯別注文数 (JS 集計) ─────────────────────────────
-  const allOrders = await prisma.order.findMany({
-    where: { status: { not: "canceled" } },
-    select: { createdAt: true },
+  // ── 時間帯別売上（会計済のみ）───────────────────────────
+  const paidOrders = await prisma.order.findMany({
+    where: { isPaid: true, status: { not: "canceled" } },
+    select: { createdAt: true, totalPrice: true },
   })
 
-  const hourlyCounts: Record<number, number> = {}
-  for (let h = 10; h <= 23; h++) hourlyCounts[h] = 0
-  for (const o of allOrders) {
+  const hourlyRevenue: Record<number, number> = {}
+  const hourlyOrderCount: Record<number, number> = {}
+  for (let h = 10; h <= 23; h++) { hourlyRevenue[h] = 0; hourlyOrderCount[h] = 0 }
+  for (const o of paidOrders) {
     const h = (new Date(o.createdAt).getUTCHours() + 9) % 24
-    if (h >= 10 && h <= 23) hourlyCounts[h] = (hourlyCounts[h] ?? 0) + 1
+    if (h >= 10 && h <= 23) {
+      hourlyRevenue[h] = (hourlyRevenue[h] ?? 0) + o.totalPrice
+      hourlyOrderCount[h] = (hourlyOrderCount[h] ?? 0) + 1
+    }
   }
-  const maxHourlyCount = Math.max(...Object.values(hourlyCounts), 1)
-  const peakHour = Object.entries(hourlyCounts).reduce(
-    (a, [h, c]) => (c > a[1] ? [Number(h), c] : a),
+  const maxHourlyRevenue = Math.max(...Object.values(hourlyRevenue), 1)
+  const peakHour = Object.entries(hourlyRevenue).reduce(
+    (a, [h, r]) => (r > a[1] ? [Number(h), r] : a),
     [0, 0]
   )[0]
 
-  // ── 店舗別パフォーマンス ─────────────────────────────────
+  // ── 店舗別パフォーマンス（会計済のみ）───────────────────
   const storeStats = await prisma.$queryRaw<StoreRow[]>(Prisma.sql`
     SELECT
       s.id           AS "storeId",
@@ -85,15 +91,16 @@ export default async function DashboardPage() {
       COUNT(o.id)::bigint                      AS "orderCount",
       COALESCE(SUM(o."partySize"), 0)::bigint  AS "totalGuests"
     FROM "Store" s
-    LEFT JOIN "Order" o ON o."storeId" = s.id AND o.status != 'canceled'::"OrderStatus"
+    LEFT JOIN "Order" o ON o."storeId" = s.id AND ${PAID_WHERE}
     GROUP BY s.id, s.name, s."isDirect", s.location
     ORDER BY "totalRevenue" DESC
   `)
 
   const allStoreRevenue = storeStats.reduce((s, r) => s + Number(r.totalRevenue), 0)
 
-  // ── 直近10件 ─────────────────────────────────────────────
+  // ── 直近10件（isPaid 問わず、canceled 除く）──────────────
   const recentOrders = await prisma.order.findMany({
+    where: { status: { not: "canceled" } },
     orderBy: { createdAt: "desc" },
     take: 10,
     include: { items: true, store: { select: { name: true } } },
@@ -106,7 +113,7 @@ export default async function DashboardPage() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold">経営ダッシュボード — 全店舗</h1>
-            <p className="text-xs text-stone-400 mt-0.5">キャンセルを除く全注文の集計</p>
+            <p className="text-xs text-stone-400 mt-0.5">会計済の確定売上のみ集計</p>
           </div>
           <p className="text-xs text-stone-400">店舗別ページから業務端末へ移動できます</p>
         </div>
@@ -114,19 +121,24 @@ export default async function DashboardPage() {
 
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-10">
 
+        {/* 補足テキスト */}
+        <p className="text-xs text-stone-500 bg-stone-100 border border-stone-200 rounded-lg px-4 py-2.5">
+          ※ 売上集計は会計済（isPaid）の注文のみを対象とします。リアルタイム状況は「直近の注文」をご確認ください。
+        </p>
+
         {/* ── サマリーカード 4枚 ── */}
         <section>
           <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-wide mb-4">サマリー</h2>
           <div className="grid grid-cols-4 gap-4">
             <SummaryCard
-              label="総売上"
+              label="確定売上"
               value={`¥${totalRevenue.toLocaleString()}`}
-              note="全注文の合計"
+              note="会計済の合計"
             />
             <SummaryCard
-              label="注文件数"
+              label="会計件数"
               value={`${totalOrders} 件`}
-              note="受付〜提供済"
+              note="注文件数（会計済）"
             />
             <SummaryCard
               label="客単価"
@@ -183,14 +195,15 @@ export default async function DashboardPage() {
             </table>
           </section>
 
-          {/* 時間帯別棒グラフ */}
+          {/* 時間帯別売上グラフ */}
           <section className="bg-white rounded-2xl border border-stone-200 p-6">
-            <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-wide mb-4">時間帯別 注文件数</h2>
+            <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-wide mb-4">時間帯別 合計売上</h2>
             <div className="space-y-1.5">
-              {Object.entries(hourlyCounts).map(([h, count]) => {
+              {Object.entries(hourlyRevenue).map(([h, revenue]) => {
                 const hour = Number(h)
+                const count = hourlyOrderCount[hour] ?? 0
                 const isPeak = hour === peakHour
-                const barWidth = maxHourlyCount > 0 ? (count / maxHourlyCount) * 100 : 0
+                const barWidth = maxHourlyRevenue > 0 ? (revenue / maxHourlyRevenue) * 100 : 0
                 return (
                   <div key={h} className="flex items-center gap-2 text-xs">
                     <span className="w-10 text-right text-stone-500 shrink-0">{h}時</span>
@@ -200,8 +213,8 @@ export default async function DashboardPage() {
                         style={{ width: `${barWidth}%` }}
                       />
                     </div>
-                    <span className={`w-8 text-right font-medium shrink-0 ${isPeak ? "text-amber-700" : "text-stone-600"}`}>
-                      {count}
+                    <span className={`w-36 text-right font-medium shrink-0 ${isPeak ? "text-amber-700" : "text-stone-600"}`}>
+                      {revenue > 0 ? `¥${revenue.toLocaleString()} (${count}組)` : "—"}
                     </span>
                   </div>
                 )
@@ -219,8 +232,8 @@ export default async function DashboardPage() {
                 <th className="pb-2 font-medium w-8">順位</th>
                 <th className="pb-2 font-medium">店舗名</th>
                 <th className="pb-2 font-medium">地域</th>
-                <th className="pb-2 font-medium text-right">売上</th>
-                <th className="pb-2 font-medium text-right">注文数</th>
+                <th className="pb-2 font-medium text-right">確定売上</th>
+                <th className="pb-2 font-medium text-right">会計件数</th>
                 <th className="pb-2 font-medium text-right">客単価</th>
                 <th className="pb-2 font-medium text-right">シェア</th>
               </tr>
@@ -259,9 +272,12 @@ export default async function DashboardPage() {
           </table>
         </section>
 
-        {/* ── 直近10件 ── */}
+        {/* ── 直近10件（未会計含む・canceled除く）── */}
         <section className="bg-white rounded-2xl border border-stone-200 p-6">
-          <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-wide mb-4">直近の注文（最新10件）</h2>
+          <h2 className="text-sm font-semibold text-stone-500 uppercase tracking-wide mb-4">
+            直近の注文（最新10件）
+            <span className="ml-2 text-xs font-normal text-stone-400 normal-case">未会計含む・リアルタイム状況確認用</span>
+          </h2>
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-stone-400 border-b border-stone-100">
@@ -271,6 +287,7 @@ export default async function DashboardPage() {
                 <th className="pb-2 font-medium">注文品目</th>
                 <th className="pb-2 font-medium text-right">金額</th>
                 <th className="pb-2 font-medium text-center">ステータス</th>
+                <th className="pb-2 font-medium text-center">会計</th>
               </tr>
             </thead>
             <tbody>
@@ -299,12 +316,17 @@ export default async function DashboardPage() {
                         {st.label}
                       </span>
                     </td>
+                    <td className="py-2.5 text-center">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${order.isPaid ? "bg-emerald-100 text-emerald-700" : "bg-stone-100 text-stone-500"}`}>
+                        {order.isPaid ? "済" : "未"}
+                      </span>
+                    </td>
                   </tr>
                 )
               })}
               {recentOrders.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-stone-400">注文がまだありません</td>
+                  <td colSpan={7} className="py-8 text-center text-stone-400">注文がまだありません</td>
                 </tr>
               )}
             </tbody>
