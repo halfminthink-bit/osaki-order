@@ -74,50 +74,52 @@ export default function ConfirmView({ table, party, items }: Props) {
   const backHref = `/order?table=${table ?? ""}&party=${party ?? ""}`
 
   return (
-    <div className="flex flex-col min-h-screen bg-background max-w-md mx-auto">
-      <header className="sticky top-0 z-10 bg-amber-600 text-white px-4 py-3 shadow-md">
-        <h1 className="text-lg font-bold">OSAKI 亭</h1>
-        {tableNum && (
-          <p className="text-xs opacity-90 mt-0.5">
-            テーブル {tableNum} 番{partyNum ? ` / ${partyNum} 名様` : ""}
-          </p>
-        )}
+    <div className="flex flex-col min-h-screen bg-stone-50 max-w-md mx-auto">
+      <header className="sticky top-0 z-10 bg-stone-900 text-white px-4 py-3">
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-bold tracking-wide">OSAKI 亭</h1>
+          {tableNum && (
+            <p className="text-xs text-stone-300">
+              {tableNum} 番{partyNum ? ` / ${partyNum} 名様` : ""}
+            </p>
+          )}
+        </div>
       </header>
 
       <main className="flex-1 px-4 py-6 space-y-5">
-        <h2 className="text-base font-bold">注文内容の確認</h2>
+        <h2 className="text-lg font-semibold text-stone-900">注文内容の確認</h2>
 
         {cartItems.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-10">
+          <p className="text-sm text-stone-500 text-center py-10">
             カートにアイテムがありません。
           </p>
         ) : (
-          <Card>
+          <Card className="border-stone-200">
             <CardContent className="py-4 px-4 space-y-3">
               {cartItems.map((c) => (
                 <div key={c.menuItem.id} className="flex items-center gap-3">
                   <span className="text-xl">{c.menuItem.emoji}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{c.menuItem.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-base font-medium text-stone-900">{c.menuItem.name}</p>
+                    <p className="text-sm text-stone-500">
                       ¥{c.menuItem.price.toLocaleString()} × {c.quantity}
                     </p>
                   </div>
-                  <p className="text-sm font-bold shrink-0">
+                  <p className="text-base font-semibold text-stone-900 shrink-0">
                     ¥{(c.menuItem.price * c.quantity).toLocaleString()}
                   </p>
                 </div>
               ))}
 
-              <div className="border-t pt-3 flex justify-between items-center">
-                <p className="font-bold">合計</p>
-                <p className="font-bold text-amber-600 text-base">
+              <div className="border-t border-stone-200 pt-3 flex justify-between items-center">
+                <p className="font-semibold text-stone-900">合計</p>
+                <p className="font-bold text-stone-900 text-base">
                   ¥{totalPrice.toLocaleString()}
                 </p>
               </div>
 
               {perPerson && (
-                <p className="text-xs text-center text-muted-foreground bg-amber-50 rounded px-3 py-2">
+                <p className="text-sm text-center text-stone-600 bg-stone-100 rounded px-3 py-2">
                   割り勘で 1人あたり ¥{perPerson.toLocaleString()}
                   （{partyNum}名 / 小数点切り上げ）
                 </p>
@@ -133,7 +135,7 @@ export default function ConfirmView({ table, party, items }: Props) {
         )}
 
         <Button
-          className="w-full h-12 bg-amber-600 hover:bg-amber-700 text-white text-base font-semibold"
+          className="w-full h-12 bg-amber-700 hover:bg-amber-800 text-white text-base font-semibold disabled:opacity-40"
           disabled={cartItems.length === 0 || submitting}
           onClick={handleOrder}
         >
@@ -141,7 +143,7 @@ export default function ConfirmView({ table, party, items }: Props) {
         </Button>
 
         <div className="text-center">
-          <Link href={backHref} className="text-sm text-amber-600 underline">
+          <Link href={backHref} className="text-sm text-stone-600 underline underline-offset-2">
             メニューに戻る
           </Link>
         </div>

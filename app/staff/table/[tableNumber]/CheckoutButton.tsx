@@ -36,14 +36,14 @@ export default function CheckoutButton({
   }
 
   return (
-    <div className="space-y-2 print:hidden">
+    <div className="flex-1 space-y-2 print:hidden">
       {error && (
         <p className="text-sm text-red-600 text-center">{error}</p>
       )}
       <button
         onClick={handleCheckout}
         disabled={loading}
-        className="flex-1 h-14 bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-base font-bold rounded-xl transition-colors disabled:opacity-50"
+        className="w-full h-14 bg-amber-700 hover:bg-amber-800 active:bg-amber-900 text-white text-base font-bold rounded-xl transition-colors disabled:opacity-50"
       >
         {loading ? "処理中..." : `会計する (合計 ¥${grandTotal.toLocaleString()})`}
       </button>

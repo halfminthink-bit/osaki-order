@@ -15,17 +15,17 @@ export default async function KitchenPage() {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      <header className="bg-gray-800 border-b border-gray-700 sticky top-0 z-10">
+      <header className="bg-stone-100 border-b border-stone-200 sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-white">キッチン端末 — OSAKI 亭</h1>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <h1 className="text-xl font-bold text-stone-900">キッチン端末 — OSAKI 亭</h1>
+            <p className="text-xs text-stone-500 mt-0.5">
               未完了 {orders.length} 件 / 受付順
             </p>
           </div>
           <Link
             href="/staff"
-            className="text-sm text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition-colors"
+            className="text-sm text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-50 border border-stone-200 px-4 py-2 rounded-lg transition-colors"
           >
             会計画面へ →
           </Link>

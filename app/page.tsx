@@ -10,22 +10,22 @@ export default async function LandingPage({
   const { table } = await searchParams
 
   return (
-    <div className="flex flex-col min-h-screen bg-background max-w-md mx-auto">
-      <header className="bg-amber-600 text-white px-4 py-4 shadow-md">
-        <h1 className="text-xl font-bold tracking-wide">OSAKI 亭</h1>
+    <div className="flex flex-col min-h-screen bg-stone-50 max-w-md mx-auto">
+      <header className="bg-stone-900 text-white px-4 py-4">
+        <h1 className="text-2xl font-bold tracking-wide">OSAKI 亭</h1>
       </header>
 
       <main className="flex-1 px-4 py-10 flex flex-col justify-center gap-6">
-        <p className="text-sm text-muted-foreground text-center leading-relaxed">
+        <p className="text-sm text-stone-600 text-center leading-relaxed">
           ご来店ありがとうございます。<br />
           テーブル番号と人数を入力してください
         </p>
 
-        <Card>
+        <Card className="border-stone-200">
           <CardContent className="py-6 space-y-5">
             <form action="/order" method="GET" className="space-y-5">
               <div className="space-y-1.5">
-                <label htmlFor="table" className="text-sm font-medium">
+                <label htmlFor="table" className="text-sm font-medium text-stone-900">
                   テーブル番号
                 </label>
                 <Input
@@ -40,7 +40,7 @@ export default async function LandingPage({
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="party" className="text-sm font-medium">
+                <label htmlFor="party" className="text-sm font-medium text-stone-900">
                   人数
                 </label>
                 <Input
@@ -56,7 +56,7 @@ export default async function LandingPage({
 
               <Button
                 type="submit"
-                className="w-full h-12 bg-amber-600 hover:bg-amber-700 text-white text-base font-semibold"
+                className="w-full h-12 bg-amber-700 hover:bg-amber-800 text-white text-base font-semibold"
               >
                 メニューを見る
               </Button>

@@ -11,16 +11,16 @@ export default async function StaffPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+    <div className="min-h-screen bg-stone-50">
+      <header className="bg-stone-100 border-b border-stone-200 sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-800">レジ・会計端末 — OSAKI 亭</h1>
-            <p className="text-xs text-gray-400">全 {orders.length} 件</p>
+            <h1 className="text-xl font-bold text-stone-900">会計端末 — OSAKI 亭</h1>
+            <p className="text-xs text-stone-500 mt-0.5">全 {orders.length} 件</p>
           </div>
           <Link
             href="/kitchen"
-            className="text-sm text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-lg transition-colors"
+            className="text-sm text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-50 border border-stone-200 px-3 py-2 rounded-lg transition-colors"
           >
             キッチン画面へ →
           </Link>
@@ -32,13 +32,13 @@ export default async function StaffPage() {
               type="number"
               min="1"
               placeholder="テーブル番号"
-              className="w-36 text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              className="w-36 text-sm border border-stone-300 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-stone-400"
             />
             <button
               type="submit"
-              className="text-sm bg-amber-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-amber-700 active:bg-amber-800"
+              className="text-sm bg-stone-900 text-white px-4 py-2 rounded-lg font-medium hover:bg-stone-700 active:bg-stone-800 transition-colors"
             >
-              会計
+              会計ページへ
             </button>
           </form>
         </div>
@@ -46,7 +46,7 @@ export default async function StaffPage() {
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-4">
         {orders.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 text-stone-400">
             <p className="text-4xl mb-3">📋</p>
             <p className="text-sm">注文がまだありません</p>
           </div>

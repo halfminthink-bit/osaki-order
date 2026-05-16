@@ -9,50 +9,55 @@ type Props = {
 
 export default async function CompletePage({ searchParams }: Props) {
   const { orderId, table, party } = await searchParams
-  const backHref = table && party ? `/order?table=${table}&party=${party}` : "/"
+  const statusHref = table
+    ? `/order/status?table=${table}${party ? `&party=${party}` : ""}`
+    : null
+  const menuHref = table && party ? `/order?table=${table}&party=${party}` : "/"
 
   return (
-    <div className="flex flex-col min-h-screen bg-background max-w-md mx-auto">
-      <header className="sticky top-0 z-10 bg-amber-600 text-white px-4 py-3 shadow-md">
-        <h1 className="text-lg font-bold">OSAKI 亭</h1>
-        {table && (
-          <p className="text-xs opacity-90 mt-0.5">
-            テーブル {table} 番{party ? ` / ${party} 名様` : ""}
-          </p>
-        )}
+    <div className="flex flex-col min-h-screen bg-stone-50 max-w-md mx-auto">
+      <header className="sticky top-0 z-10 bg-stone-900 text-white px-4 py-3">
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-bold tracking-wide">OSAKI 亭</h1>
+          {table && (
+            <p className="text-xs text-stone-300">
+              {table} 番{party ? ` / ${party} 名様` : ""}
+            </p>
+          )}
+        </div>
       </header>
 
-      <main className="flex-1 px-4 py-10 flex flex-col items-center gap-6 text-center">
-        <div className="text-5xl">✅</div>
-        <div>
-          <h2 className="text-xl font-bold mb-1">ご注文を受け付けました</h2>
-          <p className="text-sm text-muted-foreground">
-            まもなくお届けします。
+      <main className="flex-1 px-4 py-16 flex flex-col items-center gap-6 text-center">
+        <div className="text-6xl leading-none">🍱</div>
+
+        <div className="space-y-2">
+          <h2 className="text-2xl font-bold text-stone-900">
+            ご注文ありがとうございました
+          </h2>
+          <p className="text-sm text-stone-600 leading-relaxed">
+            料理ができるまでお待ちください
           </p>
         </div>
 
         {orderId && (
-          <p className="text-xs text-muted-foreground bg-muted rounded px-3 py-2 font-mono">
+          <p className="text-xs text-stone-400 font-mono bg-stone-100 rounded px-3 py-1.5">
             注文 ID: {orderId}
           </p>
         )}
 
-        <div className="flex flex-col gap-3 w-full items-center">
-          {table && (
-            <Link
-              href={`/order/status?table=${table}${party ? `&party=${party}` : ""}`}
-              className="w-full max-w-xs"
-            >
-              <Button
-                variant="outline"
-                className="w-full h-12 border-amber-600 text-amber-600 hover:bg-amber-50 text-base font-semibold"
-              >
+        <div className="flex flex-col gap-3 w-full items-center mt-4">
+          {statusHref && (
+            <Link href={statusHref} className="w-full max-w-xs">
+              <Button className="w-full h-12 bg-amber-700 hover:bg-amber-800 text-white text-base font-semibold">
                 注文状況を見る
               </Button>
             </Link>
           )}
-          <Link href={backHref} className="w-full max-w-xs">
-            <Button className="w-full h-12 bg-amber-600 hover:bg-amber-700 text-white text-base font-semibold">
+          <Link href={menuHref} className="w-full max-w-xs">
+            <Button
+              variant="outline"
+              className="w-full h-12 border-stone-900 text-stone-900 hover:bg-stone-100 text-base font-semibold"
+            >
               追加注文する
             </Button>
           </Link>

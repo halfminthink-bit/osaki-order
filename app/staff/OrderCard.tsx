@@ -28,10 +28,10 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  received: "bg-amber-100 text-amber-800",
+  received: "bg-stone-100 text-stone-600",
   preparing: "bg-amber-100 text-amber-800",
-  served: "bg-green-100 text-green-800",
-  canceled: "bg-gray-100 text-gray-500",
+  served: "bg-emerald-100 text-emerald-700",
+  canceled: "bg-stone-100 text-stone-400",
 }
 
 export default function OrderCard({ order }: { order: Order }) {
@@ -62,20 +62,21 @@ export default function OrderCard({ order }: { order: Order }) {
   const showButtons = !isPaid && !isCanceled
 
   return (
-    <div className={`bg-white rounded-xl shadow border overflow-hidden transition-opacity ${
-      isPaid || isCanceled ? "opacity-60" : ""
-    } ${isCanceled ? "border-gray-200" : "border-gray-100"}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-100">
+    <div
+      className={`bg-white rounded-xl border overflow-hidden transition-opacity ${
+        isPaid || isCanceled ? "opacity-60" : ""
+      } ${isCanceled ? "border-stone-200" : "border-stone-200"}`}
+    >
+      <div className="flex items-center justify-between px-4 py-3 bg-stone-50 border-b border-stone-100">
         <div className="flex items-center gap-3">
           <a
             href={`/staff/table/${order.tableNumber}`}
-            className="text-lg font-bold text-amber-600 hover:underline"
+            className="text-lg font-bold text-stone-900 hover:underline"
           >
             テーブル {order.tableNumber}
           </a>
-          <span className="text-sm text-gray-500">{order.partySize}名</span>
-          <span className="text-sm text-gray-400">{timeStr}</span>
+          <span className="text-sm text-stone-500">{order.partySize}名</span>
+          <span className="text-sm text-stone-400">{timeStr}</span>
         </div>
         <div className="flex items-center gap-2">
           {isPaid && (
@@ -84,32 +85,32 @@ export default function OrderCard({ order }: { order: Order }) {
             </span>
           )}
           {!isPaid && (
-            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${STATUS_COLORS[status] ?? "bg-gray-100 text-gray-500"}`}>
+            <span
+              className={`text-xs font-semibold px-2 py-1 rounded-full ${STATUS_COLORS[status] ?? "bg-stone-100 text-stone-500"}`}
+            >
               {STATUS_LABELS[status] ?? status}
             </span>
           )}
         </div>
       </div>
 
-      {/* Items */}
       <div className="px-4 py-3 space-y-1">
         {order.items.map((item) => (
           <div key={item.id} className="flex justify-between text-sm">
-            <span className={isCanceled ? "text-gray-400 line-through" : "text-gray-700"}>
+            <span className={isCanceled ? "text-stone-400 line-through" : "text-stone-700"}>
               {item.menuItemName} × {item.quantity}
             </span>
-            <span className="text-gray-500">
+            <span className="text-stone-500">
               ¥{(item.price * item.quantity).toLocaleString()}
             </span>
           </div>
         ))}
       </div>
 
-      {/* Footer */}
-      <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+      <div className="px-4 py-3 border-t border-stone-100 flex items-center justify-between">
         <div>
-          <span className="text-sm text-gray-500">合計 </span>
-          <span className={`font-bold ${isCanceled ? "text-gray-400 line-through" : "text-gray-800"}`}>
+          <span className="text-sm text-stone-500">合計 </span>
+          <span className={`font-bold ${isCanceled ? "text-stone-400 line-through" : "text-stone-900"}`}>
             ¥{order.totalPrice.toLocaleString()}
           </span>
         </div>
