@@ -41,6 +41,7 @@
 - **DB を叩く Server Component には `export const dynamic = 'force-dynamic';` を明示。** ビルド時クラッシュ防止。
 - **既存の自動生成ファイルを安易に消さない。** 特に `lib/utils.ts`(shadcn の `cn` ヘルパー)や `lib/prisma.ts`(後で導入)は触らない。
 - **Vercel Hobby プランの Deployment Protection。** プロジェクト作成直後は Settings → Deployment Protection の「Require Log In」が **ON のまま** だと全URLが 404 を返す。プロジェクト作成後すぐに **OFF にして Save**。
+- **QR URL には `?store=X` が必須。** `store` パラメータなしでアクセスすると入店画面・メニュー・注文確認・注文状況の全ページでエラー表示になる設計。店舗 slug (例: `tokyo-shinjuku`) は Store テーブルの id と一致していなければ POST /api/orders が 400 を返す。
 
 ---
 
@@ -78,6 +79,24 @@ public/               # 静的アセット
 
 ## データモデル(全タスクで一貫してこの形で扱う)
 
+### Store(店舗)
+```typescript
+type Store = {
+  id: string        // "tokyo-shinjuku" のような slug(QR URL に使う)
+  name: string      // "OSAKI亭 新宿店"
+  isDirect: boolean // 直営 true、FC false
+  location: string? // 表示用の地域("東京・新宿"など)
+  createdAt: Date
+}
+```
+
+現在の5店舗:
+- `tokyo-shinjuku`  — OSAKI亭 新宿店（直営）
+- `tokyo-shibuya`   — OSAKI亭 渋谷店（直営）
+- `osaka-shinsai`   — OSAKI亭 心斎橋店（直営）
+- `fukuoka-tenjin`  — 大崎ラーメン 天神店（FC）
+- `nagoya-sakae`    — OSAKI亭 栄店（FC）
+
 ### MenuItem(メニュー1品)
 ```typescript
 type MenuItem = {
@@ -97,6 +116,7 @@ type MenuCategory = "main" | "noodles" | "side" | "drink" | "dessert"
 ```typescript
 type Order = {
   id: string
+  storeId: string           // Store.id。QR URL の ?store= から取得。必須
   tableNumber: number       // QRパラメータから取得
   partySize: number         // 入店時に客が入力(1〜10人想定)
   items: OrderItem[]
@@ -155,7 +175,8 @@ pnpm prisma generate  # クライアント生成
 7. 会計済管理(isPaid)による席回転対応: **会計はテーブル単位の一括操作**。/staff/table/[n] の「会計する」ボタンで `POST /api/tables/[n]/checkout` を叩き、未払い全注文を一括 isPaid: true に。個別の isPaid 操作は禁止(誤操作防止)。会計後は /staff/table と /order/status から除外され、同席番号の次客注文と混ざらない
 
 ### Should(時間が許せば)
-- 経営ダッシュボード(`/dashboard`): 売れ筋ランキング、時間帯別、客単価
+- 経営ダッシュボード(`/dashboard`): 売れ筋ランキング、時間帯別、客単価 **[実装済]**
+- 店舗別比較ダッシュボード(`/dashboard/[storeId]`): 全店平均との比較・緑/赤色分け **[実装済]**
 - 品切れメニューの追加禁止 + エラー表示
 - 割り勘機能(`totalPrice / partySize` を表示)
 
