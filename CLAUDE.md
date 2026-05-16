@@ -7,10 +7,21 @@
 
 ## このプロジェクトの目的
 
-飲食店向けプロトタイプ。店舗客が自分のスマホでQRを読み、ウェブで注文を送信、店員側ページで注文一覧を確認できる、までを最短で動かす。
-インターン1day課題のため、**今日中に「公開URLで触れる」状態を最優先**。コードの美しさより動作と公開を優先。
+飲食店向けプロトタイプ。客が席のQRをスマホで読み、注文を送信。店員側ページで席別の注文一覧と状態管理ができる。注文データはDBに永続化され、後から経営判断に使える。
 
-ただし、**注文履歴は永続化(DB保存)してあとから確認できる**ことには時間をかけてよい。これがこのプロジェクトで唯一こだわるポイント。
+**インターン1day課題のため、今日中に「クライアントに見せて伝わる」状態に持っていく**ことが最優先。コードの美しさより、動作・公開・**MVPストーリーの体現**を優先。
+
+---
+
+## MVPの価値定義(これがこのプロジェクトの「なぜ」)
+
+タブレット端末を廃止し、客のスマホを注文端末にすることで:
+
+1. **客側**: 取り合い・呼び出しのストレスゼロ、追加注文しやすい(→客単価向上)
+2. **店員側**: 席ごとの注文が一目で見え、会計時の照合が瞬時(→オペレーションミス削減)
+3. **経営側**: 全店舗の注文データが1つのDBに集約、売れ筋・時間帯・客単価が定量で見える(→メニュー改定・店舗展開の判断材料)
+
+**実装上の意味**: 「動く注文システム」を作るだけではなく、**注文がDBに正しく構造化されて残ること**、**席別・時間別・人数別で集計可能なデータ粒度を保つこと**が重要。UIの美しさより、データの設計と流れを優先する。
 
 ---
 
@@ -25,10 +36,11 @@
 
 ## ⚠️ 重要な前提・落とし穴(先に読む)
 
-- **Next.js 16 系を使用。** App Router で動的ルート(`params`)が `Promise<{...}>` になっている。`await params` が必要。古い書き方(同期取得)を書かない。書く前に最新の App Router 仕様を確認すること。
-- **pnpm 11 系の build script ブロック問題。** `sharp` / `unrs-resolver` などのネイティブビルドが必要なパッケージは、`package.json` の `pnpm.onlyBuiltDependencies` に明示しないと Vercel ビルドで失敗する。`pnpm approve-builds` の結果はグローバル設定に書かれるためリポジトリには反映されない。**必ず `package.json` に書く。**
+- **Next.js 16 系を使用。** App Router で動的ルート(`params`)が `Promise<{...}>` になっている。`await params` が必要。古い書き方(同期取得)を書かない。
+- **pnpm 11 系の build script ブロック問題。** `sharp` / `unrs-resolver` / `msw` などのネイティブ系・postinstall系パッケージは `pnpm-workspace.yaml` の `allowBuilds` で明示制御。必要に応じて `ignoredBuiltDependencies` も使う。`pnpm approve-builds` の結果はグローバル設定でリポジトリには反映されないので使わない。
 - **DB を叩く Server Component には `export const dynamic = 'force-dynamic';` を明示。** ビルド時クラッシュ防止。
-- **既存の自動生成ファイルを安易に消さない。** 特に `lib/` 配下のシングルトン(例: PrismaClient)は触らない。
+- **既存の自動生成ファイルを安易に消さない。** 特に `lib/utils.ts`(shadcn の `cn` ヘルパー)や `lib/prisma.ts`(後で導入)は触らない。
+- **Vercel Hobby プランの Deployment Protection。** プロジェクト作成直後は Settings → Deployment Protection の「Require Log In」が **ON のまま** だと全URLが 404 を返す。プロジェクト作成後すぐに **OFF にして Save**。
 
 ---
 
@@ -37,11 +49,11 @@
 | レイヤ | 採用 |
 |---|---|
 | フレームワーク | Next.js 16 (App Router) + TypeScript |
-| UI / スタイル | React 19 + Tailwind CSS v4 |
+| UI / スタイル | React 19 + Tailwind CSS v4 + shadcn/ui (Radix/Nova preset) |
 | パッケージマネージャ | **pnpm**(npm/yarn は使わない) |
-| DB | Vercel Postgres(後ほど導入) |
+| DB | Neon PostgreSQL(後ほど導入) |
 | ORM | Prisma(後ほど導入) |
-| デプロイ | Vercel(GitHub 連携で自動デプロイ) |
+| デプロイ | Vercel(GitHub 連携で自動デプロイ済み: https://osaki-order-fu2c.vercel.app) |
 
 ---
 
@@ -49,12 +61,65 @@
 
 ```
 app/                  # Next.js App Router ルート
-  page.tsx            # トップ
-  order/              # 客側: 注文画面(後で実装)
-  staff/              # 店員側: 注文一覧(後で実装)
-lib/                  # サーバー側ユーティリティ(prisma クライアント等)
+  page.tsx            # 客側: 注文トップ(メニュー一覧)
+  order/              # 注文関連サブページ(後で)
+  staff/              # 店員側: 注文受信一覧(後で)
+  api/                # Route Handler(後で。POST /api/orders など)
+components/
+  ui/                 # shadcn/ui コンポーネント (Button, Card, Input, ...)
+lib/
+  utils.ts            # shadcn の cn ヘルパー(変更不可)
+  menu.ts             # メニューデータ(後で。UIから分離)
+  prisma.ts           # PrismaClient シングルトン(後で。変更不可)
 public/               # 静的アセット
 ```
+
+---
+
+## データモデル(全タスクで一貫してこの形で扱う)
+
+### MenuItem(メニュー1品)
+```typescript
+type MenuItem = {
+  id: string                // "ramen-001"
+  name: string              // "醤油ラーメン"
+  price: number             // 980 (円、税込)
+  category: MenuCategory    // "main" | "noodles" | "side" | "drink" | "dessert"
+  description?: string
+  imageUrl?: string         // 未設定なら絵文字で代用
+  isSoldOut: boolean
+}
+
+type MenuCategory = "main" | "noodles" | "side" | "drink" | "dessert"
+```
+
+### Order(1回の注文確定 = 1レコード)
+```typescript
+type Order = {
+  id: string
+  tableNumber: number       // QRパラメータから取得
+  partySize: number         // 入店時に客が入力(1〜10人想定)
+  items: OrderItem[]
+  totalPrice: number        // items の合計を保存(後で集計しやすい)
+  status: OrderStatus       // "received" | "cooking" | "served" | "canceled"
+  createdAt: Date           // 時間帯分析に使う
+  updatedAt: Date
+}
+
+type OrderStatus = "received" | "cooking" | "served" | "canceled"
+```
+
+### OrderItem(注文の中の1品)
+```typescript
+type OrderItem = {
+  menuItemId: string
+  menuItemName: string      // スナップショット(メニュー名が変わっても過去注文を正しく表示)
+  price: number             // スナップショット(価格改定対応)
+  quantity: number
+}
+```
+
+**スナップショット設計の理由**: メニューを後で値上げ・改名しても、過去の注文履歴は当時の名前と価格で残り続ける。経営ダッシュボードや会計記録の整合性を保つため。これは外せない設計。
 
 ---
 
@@ -71,51 +136,70 @@ DB 導入後に追加予定:
 ```bash
 pnpm prisma db push   # スキーマ反映
 pnpm prisma studio    # DB GUI 確認
+pnpm prisma generate  # クライアント生成
 ```
 
 ---
 
 ## 機能要件
 
-### Must(必ず完成させる)
-1. Vercel に公開デプロイ済み、URL が共有可能
-2. 客がスマホでアクセスし、メニューから選択 → 注文送信できる
-3. **注文が DB に保存される**
-4. 店員側ページで注文一覧が確認できる(リロードで最新化でOK)
+### Must(必ず完成させる - MVP の核)
+1. 客がスマホでアクセスし、テーブル番号 + 人数を入れてからメニューを見る
+2. メニューはジャンル別表示、各品に「+追加」ボタン
+3. 注文カゴで合計金額が見える
+4. 「注文確定」を押すと **DB に保存される**(Order + OrderItem)
+5. 店員側ページで注文一覧が見える、ステータス変更ができる
+6. 店員ページで「テーブル番号 → そのテーブルの注文と合計」が見える(会計用)
 
 ### Should(時間が許せば)
-- テーブル番号を QR から渡す(クエリパラメータ程度でOK)
-- 注文の状態管理(受付/調理中/提供済)
+- 経営ダッシュボード(`/dashboard`): 売れ筋ランキング、時間帯別、客単価
+- 品切れメニューの追加禁止 + エラー表示
+- 割り勘機能(`totalPrice / partySize` を表示)
 
-### やらないこと
-- ログイン / 認証(店員ページも公開でよい。プロトタイプ前提)
+### やらないこと(明示的な禁止)
+- **ログイン / 認証**は実装しない。店員ページも公開URLでOK(プロトタイプ前提、本番では追加する旨をプレゼンで言う)
 - 決済
-- リアルタイム更新(WebSocket 等)。リロードで十分
+- リアルタイム更新(WebSocket等)。リロードで十分
 - テストコード
-- 過剰なコンポーネント分割
-- ダークモード対応や凝ったデザインシステム
+- AI画像生成。メニュー画像は**絵文字(🍜🍣🍻🍰)で代用**。時間があれば最後に差し替え
+- 過剰なコンポーネント分割、過剰な抽象化
+- ダークモード対応・凝ったデザインシステム
+- レスポンシブのPC最適化(スマホ幅で動けばOK、PC表示は `max-w-md` でセンタリングだけ)
+
+---
+
+## デザイン方針
+
+- **スマホ幅 375px 基準**。PC表示は `max-w-md mx-auto` でセンタリング
+- アクセントカラーは**暖色1色**(amber-600 or red-600)。多用しない
+- ボタン高さ 48px 以上(指で押しやすく)
+- カードは縦に並べる(横スクロールは作らない)
+- メニュー画像は絵文字で十分
 
 ---
 
 ## 作業ルール
 
 ### 1. 小さく刻む
-1機能ずつ実装し、ローカルで動作確認 → コミット → push → Vercel デプロイ成功を確認してから次へ。「まとめて実装してから push」をやらない。
+1機能ずつ実装し、ローカルで動作確認 → コミット → push → Vercelデプロイ成功を確認してから次へ。「まとめて実装してから push」をやらない。
 
 ### 2. 既存コードを尊重
-自動生成された初期ファイル(`app/page.tsx` 等)を必要以上に書き換えない。必要な箇所だけ差分で。
+自動生成された初期ファイルや shadcn が生成した `components/ui/*` を必要以上に書き換えない。必要な箇所だけ差分で。
 
-### 3. 不明点は止まる
+### 3. データモデルから外れない
+上で定義した型(MenuItem / Order / OrderItem)を全タスクで一貫して使う。途中で勝手にフィールドを足したり名前を変えない。必要なら相談する。
+
+### 4. 不明点は止まる
 仕様判断に迷ったら勝手に進めず、3行以内で状況を報告して指示を仰ぐ。「とりあえず動くコード」で進めない。
 
-### 4. 検証手段
+### 5. 検証手段
 何か実装したら以下のいずれかで確認してから完了扱いにする:
 - `pnpm dev` で画面が出る
 - `pnpm build` がエラー0で通る
 - Vercel のデプロイが Ready になる
 
-### 5. コミット粒度
-機能単位でコミット、メッセージは英語の短文(`feat: add order form`, `fix: handle empty cart` など)。
+### 6. コミット粒度
+機能単位でコミット、メッセージは英語の短文(`feat: add menu list`, `feat: persist orders to db` など)。
 
 ---
 
@@ -123,6 +207,6 @@ pnpm prisma studio    # DB GUI 確認
 
 エラーや判断に迷ったら、勝手に進めず以下のいずれか:
 - ユーザーに状況を3行以内で報告して指示を仰ぐ
-- 公式ドキュメント(Next.js / Prisma / Vercel)を参照する
+- 公式ドキュメント(Next.js 16 / Prisma / Vercel / Neon)を参照する
 
 **「とりあえず動くコード」を投げ続けないこと。** わからないときは止まる。

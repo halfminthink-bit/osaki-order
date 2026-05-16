@@ -1,5 +1,7 @@
 "use client"
 
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,6 +14,10 @@ type Props = {
 }
 
 export default function ConfirmView({ table, party, items }: Props) {
+  const router = useRouter()
+  const [submitting, setSubmitting] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
   const tableNum = table ? parseInt(table, 10) : null
   const partyNum = party ? parseInt(party, 10) : null
 
@@ -34,19 +40,35 @@ export default function ConfirmView({ table, party, items }: Props) {
 
   const perPerson = partyNum && partyNum > 0 ? Math.ceil(totalPrice / partyNum) : null
 
-  const handleOrder = () => {
-    console.log("Order confirmed:", {
-      tableNum,
-      partyNum,
-      items: cartItems.map((c) => ({
-        menuItemId: c.menuItem.id,
-        menuItemName: c.menuItem.name,
-        price: c.menuItem.price,
-        quantity: c.quantity,
-      })),
-      totalPrice,
-    })
-    alert("注文を受け付けました（DB保存は次のブロックで実装）")
+  const handleOrder = async () => {
+    if (!tableNum || !partyNum) return
+    setSubmitting(true)
+    setErrorMsg(null)
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tableNumber: tableNum,
+          partySize: partyNum,
+          items: cartItems.map((c) => ({
+            menuItemId: c.menuItem.id,
+            quantity: c.quantity,
+          })),
+        }),
+      })
+      if (!res.ok) {
+        const data = await res.json()
+        setErrorMsg(data.error ?? "注文に失敗しました")
+        return
+      }
+      const { orderId } = await res.json()
+      router.push(`/order/complete?orderId=${orderId}&table=${table}&party=${party}`)
+    } catch {
+      setErrorMsg("通信エラーが発生しました。もう一度お試しください。")
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const backHref = `/order?table=${table ?? ""}&party=${party ?? ""}`
@@ -104,12 +126,18 @@ export default function ConfirmView({ table, party, items }: Props) {
           </Card>
         )}
 
+        {errorMsg && (
+          <p className="text-sm text-red-600 text-center bg-red-50 rounded px-3 py-2">
+            {errorMsg}
+          </p>
+        )}
+
         <Button
           className="w-full h-12 bg-amber-600 hover:bg-amber-700 text-white text-base font-semibold"
-          disabled={cartItems.length === 0}
+          disabled={cartItems.length === 0 || submitting}
           onClick={handleOrder}
         >
-          注文を確定する
+          {submitting ? "送信中…" : "注文を確定する"}
         </Button>
 
         <div className="text-center">

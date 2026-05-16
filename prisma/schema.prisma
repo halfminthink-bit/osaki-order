@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrderStatus {
+  received
+  cooking
+  served
+  canceled
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  tableNumber Int
+  partySize   Int
+  totalPrice  Int
+  status      OrderStatus @default(received)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  items       OrderItem[]
+}
+
+model OrderItem {
+  id           String @id @default(cuid())
+  orderId      String
+  order        Order  @relation(fields: [orderId], references: [id])
+  menuItemId   String
+  menuItemName String
+  price        Int
+  quantity     Int
+}
