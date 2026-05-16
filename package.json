@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
@@ -33,12 +34,14 @@
     "eslint-config-next": "16.2.6",
     "prisma": "^7.8.0",
     "tailwindcss": "^4",
+    "tsx": "^4.22.0",
     "typescript": "^5"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
       "@prisma/engines",
       "@tailwindcss/oxide",
+      "esbuild",
       "lightningcss",
       "prisma",
       "sharp",
