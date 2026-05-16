@@ -65,7 +65,7 @@ export default async function DashboardPage() {
   const hourlyCounts: Record<number, number> = {}
   for (let h = 10; h <= 23; h++) hourlyCounts[h] = 0
   for (const o of allOrders) {
-    const h = new Date(o.createdAt).getHours()
+    const h = (new Date(o.createdAt).getUTCHours() + 9) % 24
     if (h >= 10 && h <= 23) hourlyCounts[h] = (hourlyCounts[h] ?? 0) + 1
   }
   const maxHourlyCount = Math.max(...Object.values(hourlyCounts), 1)
@@ -108,20 +108,7 @@ export default async function DashboardPage() {
             <h1 className="text-lg font-bold">経営ダッシュボード — 全店舗</h1>
             <p className="text-xs text-stone-400 mt-0.5">キャンセルを除く全注文の集計</p>
           </div>
-          <nav className="flex gap-3">
-            <Link
-              href="/kitchen"
-              className="text-sm text-stone-300 hover:text-white bg-stone-800 hover:bg-stone-700 px-3 py-2 rounded-lg transition-colors"
-            >
-              キッチン端末
-            </Link>
-            <Link
-              href="/staff"
-              className="text-sm text-stone-300 hover:text-white bg-stone-800 hover:bg-stone-700 px-3 py-2 rounded-lg transition-colors"
-            >
-              会計端末
-            </Link>
-          </nav>
+          <p className="text-xs text-stone-400">店舗別ページから業務端末へ移動できます</p>
         </div>
       </header>
 
@@ -289,6 +276,7 @@ export default async function DashboardPage() {
             <tbody>
               {recentOrders.map((order) => {
                 const time = new Date(order.createdAt).toLocaleTimeString("ja-JP", {
+                  timeZone: "Asia/Tokyo",
                   hour: "2-digit",
                   minute: "2-digit",
                 })

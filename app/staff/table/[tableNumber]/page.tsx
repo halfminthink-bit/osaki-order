@@ -40,7 +40,7 @@ export default async function TableBillingPage({
       <header className="bg-stone-100 border-b border-stone-200 sticky top-0 z-10 print:hidden">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
           <Link
-            href="/staff"
+            href={store ? `/staff?store=${store}` : "/staff"}
             className="text-sm text-stone-600 hover:text-stone-900 transition-colors"
           >
             ← 一覧に戻る
@@ -69,6 +69,7 @@ export default async function TableBillingPage({
                   <span className="text-sm font-semibold text-stone-700">注文 {i + 1}</span>
                   <span className="ml-3 text-xs text-stone-400">
                     {new Date(order.createdAt).toLocaleTimeString("ja-JP", {
+                      timeZone: "Asia/Tokyo",
                       hour: "2-digit",
                       minute: "2-digit",
                     })}

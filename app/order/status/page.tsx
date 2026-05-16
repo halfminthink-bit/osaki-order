@@ -104,6 +104,7 @@ export default async function StatusPage({ searchParams }: Props) {
             {orders.map((order, idx) => {
               const isCanceled = order.status === "canceled"
               const timeStr = new Date(order.createdAt).toLocaleTimeString("ja-JP", {
+                timeZone: "Asia/Tokyo",
                 hour: "2-digit",
                 minute: "2-digit",
               })

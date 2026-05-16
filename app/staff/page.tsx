@@ -11,10 +11,30 @@ export default async function StaffPage({
 }) {
   const { store } = await searchParams
 
+  if (!store) {
+    return (
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center px-6">
+        <div className="text-center max-w-sm">
+          <p className="text-5xl mb-4">⚠️</p>
+          <p className="text-lg font-semibold text-stone-900 mb-2">店舗が指定されていません</p>
+          <p className="text-sm text-stone-500 mb-6 leading-relaxed">
+            会計端末を起動するには、店舗を指定してください。
+          </p>
+          <Link
+            href="/dashboard"
+            className="inline-block text-sm bg-stone-900 hover:bg-stone-700 text-white px-5 py-2.5 rounded-lg transition-colors"
+          >
+            全店ダッシュボードへ →
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   const [orders, stores] = await Promise.all([
     prisma.order.findMany({
       where: {
-        ...(store ? { storeId: store } : {}),
+        storeId: store,
         isPaid: false,
         status: { not: "canceled" },
       },
@@ -65,7 +85,7 @@ export default async function StaffPage({
     (a, b) => a.oldestCreatedAt.getTime() - b.oldestCreatedAt.getTime()
   )
 
-  const storeLabel = store ? (storeNameMap[store] ?? store) : "全店舗"
+  const storeLabel = storeNameMap[store] ?? store
 
   return (
     <div className="min-h-screen bg-stone-50">
@@ -74,15 +94,23 @@ export default async function StaffPage({
           <div>
             <h1 className="text-xl font-bold text-stone-900">会計端末 — {storeLabel}</h1>
             <p className="text-xs text-stone-500 mt-0.5">
-              {storeLabel} / 対応中 {groups.length} テーブル
+              対応中 {groups.length} テーブル
             </p>
           </div>
-          <Link
-            href="/kitchen"
-            className="text-sm text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-50 border border-stone-200 px-3 py-2 rounded-lg transition-colors"
-          >
-            キッチン画面へ →
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href={`/kitchen?store=${store}`}
+              className="text-sm text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-50 border border-stone-200 px-3 py-2 rounded-lg transition-colors"
+            >
+              キッチン端末へ →
+            </Link>
+            <Link
+              href={`/dashboard/${store}`}
+              className="text-sm text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-50 border border-stone-200 px-3 py-2 rounded-lg transition-colors"
+            >
+              ダッシュボード
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -100,10 +128,7 @@ export default async function StaffPage({
             >
               <div className="px-4 py-3 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-stone-900">
-                    {group.storeName}
-                  </span>
-                  <span className="ml-2 font-semibold text-amber-800">
+                  <span className="font-semibold text-amber-800">
                     テーブル {group.tableNumber}
                   </span>
                   <span className="ml-2 text-sm text-stone-500">{group.partySize}名</span>
@@ -118,7 +143,7 @@ export default async function StaffPage({
 
               <div className="divide-y divide-stone-100">
                 {group.orders.map((order) => (
-                  <OrderCard key={order.id} order={order} />
+                  <OrderCard key={order.id} order={order} storeId={store} />
                 ))}
               </div>
 
@@ -138,7 +163,7 @@ export default async function StaffPage({
       <div className="max-w-2xl mx-auto px-4 pb-10">
         <p className="text-xs text-stone-400 mb-2 text-center">テーブル番号で直接検索</p>
         <form action="/staff/table" className="flex gap-2 justify-center">
-          {store && <input type="hidden" name="store" value={store} />}
+          <input type="hidden" name="store" value={store} />
           <input
             name="table"
             type="number"

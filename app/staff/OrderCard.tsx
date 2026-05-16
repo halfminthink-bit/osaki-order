@@ -34,7 +34,7 @@ const STATUS_COLORS: Record<string, string> = {
   canceled: "bg-stone-100 text-stone-400",
 }
 
-export default function OrderCard({ order }: { order: Order }) {
+export default function OrderCard({ order, storeId }: { order: Order; storeId?: string }) {
   const [status, setStatus] = useState(order.status)
   const isPaid = order.isPaid
   const [loading, setLoading] = useState(false)
@@ -54,6 +54,7 @@ export default function OrderCard({ order }: { order: Order }) {
 
   const createdAt = new Date(order.createdAt)
   const timeStr = createdAt.toLocaleTimeString("ja-JP", {
+    timeZone: "Asia/Tokyo",
     hour: "2-digit",
     minute: "2-digit",
   })
@@ -70,7 +71,7 @@ export default function OrderCard({ order }: { order: Order }) {
       <div className="flex items-center justify-between px-4 py-3 bg-stone-50 border-b border-stone-100">
         <div className="flex items-center gap-3">
           <a
-            href={`/staff/table/${order.tableNumber}`}
+            href={`/staff/table/${order.tableNumber}${storeId ? `?store=${storeId}` : ""}`}
             className="text-lg font-bold text-stone-900 hover:underline"
           >
             テーブル {order.tableNumber}

@@ -106,7 +106,7 @@ export default async function StoreDashboardPage({
   const hourlyCounts: Record<number, number> = {}
   for (let h = 10; h <= 23; h++) hourlyCounts[h] = 0
   for (const o of storeOrders2) {
-    const h = new Date(o.createdAt).getHours()
+    const h = (new Date(o.createdAt).getUTCHours() + 9) % 24
     if (h >= 10 && h <= 23) hourlyCounts[h] = (hourlyCounts[h] ?? 0) + 1
   }
   const maxHourlyCount = Math.max(...Object.values(hourlyCounts), 1)
@@ -153,13 +153,13 @@ export default async function StoreDashboardPage({
               ← 全店ダッシュボード
             </Link>
             <Link
-              href="/kitchen"
+              href={`/kitchen?store=${storeId}`}
               className="text-sm text-stone-300 hover:text-white bg-stone-800 hover:bg-stone-700 px-3 py-2 rounded-lg transition-colors"
             >
               キッチン端末
             </Link>
             <Link
-              href="/staff"
+              href={`/staff?store=${storeId}`}
               className="text-sm text-stone-300 hover:text-white bg-stone-800 hover:bg-stone-700 px-3 py-2 rounded-lg transition-colors"
             >
               会計端末
@@ -267,6 +267,7 @@ export default async function StoreDashboardPage({
             <tbody>
               {recentOrders.map((order) => {
                 const time = new Date(order.createdAt).toLocaleTimeString("ja-JP", {
+                  timeZone: "Asia/Tokyo",
                   hour: "2-digit",
                   minute: "2-digit",
                 })

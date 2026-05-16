@@ -10,19 +10,37 @@ export default async function KitchenPage({
   searchParams: Promise<{ store?: string }>
 }) {
   const { store } = await searchParams
-  const orders = await prisma.order.findMany({
-    where: {
-      ...(store ? { storeId: store } : {}),
-      status: "received",
-    },
-    orderBy: { createdAt: "asc" },
-    include: { items: true },
-  })
 
-  const storeRecord = store
-    ? await prisma.store.findUnique({ where: { id: store }, select: { name: true } })
-    : null
-  const storeLabel = storeRecord ? storeRecord.name : "全店舗"
+  if (!store) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center px-6">
+        <div className="text-center max-w-sm">
+          <p className="text-5xl mb-4">⚠️</p>
+          <p className="text-lg font-semibold text-white mb-2">店舗が指定されていません</p>
+          <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+            キッチン端末を起動するには、店舗を指定してください。
+          </p>
+          <Link
+            href="/dashboard"
+            className="inline-block text-sm bg-stone-700 hover:bg-stone-600 text-white px-5 py-2.5 rounded-lg transition-colors"
+          >
+            全店ダッシュボードへ →
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  const [orders, storeRecord] = await Promise.all([
+    prisma.order.findMany({
+      where: { storeId: store, status: "received" },
+      orderBy: { createdAt: "asc" },
+      include: { items: true },
+    }),
+    prisma.store.findUnique({ where: { id: store }, select: { name: true } }),
+  ])
+
+  const storeLabel = storeRecord?.name ?? store
 
   return (
     <div className="min-h-screen bg-gray-900">
@@ -34,12 +52,20 @@ export default async function KitchenPage({
               未完了 {orders.length} 件 / 受付順
             </p>
           </div>
-          <Link
-            href="/staff"
-            className="text-sm text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-50 border border-stone-200 px-4 py-2 rounded-lg transition-colors"
-          >
-            会計画面へ →
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href={`/staff?store=${store}`}
+              className="text-sm text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-50 border border-stone-200 px-3 py-2 rounded-lg transition-colors"
+            >
+              会計端末へ →
+            </Link>
+            <Link
+              href={`/dashboard/${store}`}
+              className="text-sm text-stone-600 hover:text-stone-900 bg-white hover:bg-stone-50 border border-stone-200 px-3 py-2 rounded-lg transition-colors"
+            >
+              ダッシュボード
+            </Link>
+          </div>
         </div>
       </header>
 
